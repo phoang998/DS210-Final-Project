@@ -20,6 +20,19 @@ impl Graph {
         let file = File::open(file_path)?;
         let reader = io::BufReader::new(file);
         let mut nodes = Vec::new();
+        let mut rng = rand::thread_rng();
+
+        // Grab random sample of 30,000 lines
+        let lines: Vec<_> = reader.lines().choose_multiple(&mut rng, 30000);
+
+        for line in lines {
+            let line = line?:
+
+            // Ignore comments and header
+            if line.starts_with('#') || line.contains("FromNodeId") {
+                continue;
+            }
+        }
 
         for line in reader.lines() {
             let line = line?;
