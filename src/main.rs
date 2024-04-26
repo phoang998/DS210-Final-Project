@@ -60,7 +60,16 @@ impl Graph {
 
     // Calculate distances for all nodes
     fn calculate_distances(&self) -> Vec<f32> {
-        // code
+        let mut distances = Vec::new();
+
+        for node in &self.nodes {
+            for edge_id in &node.edges {
+                if let Some(edge) = self.nodes.iter().find(|&n| n.id == *edge_id) {
+                    let distance = (node.id as f32 - edge.id as f32).abs();
+                    distances.push(distance);
+                }
+            }
+        }
     }
 
     // Calculate the average distance 
