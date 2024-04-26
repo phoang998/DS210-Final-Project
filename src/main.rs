@@ -32,23 +32,19 @@ impl Graph {
             if line.starts_with('#') || line.contains("FromNodeId") {
                 continue;
             }
-        }
 
-        for line in reader.lines() {
-            let line = line?;
-            if !line.starts_with('#') {
-                let mut parts = line.split_whitespace();
-                let from_node: u32 = parts.next().unwrap().parse().unwrap();
-                let to_node: u32 = parts.next().unwrap().parse().unwrap();
+            let mut parts = line.split_whitespace();
+            let from_node: u32 = parts.next().unwrap().parse().unwrap();
+            let to_node: u32 = parts.next().unwrap().parse().unwrap();
 
-                // Check if from_node is already in the list of nodes
-                let from_index = match nodes.iter().position(|n| n.id == from_node) {
-                    Some(index) => index,
-                    None => {
-                        nodes.push(Node { id: from_node, edges: Vec::new() });
-                        nodes.len() - 1
-                    }
-                };
+            // Check if from_node is already in the list of nodes
+            let from_index = match nodes.iter().position(|n| n.id == from_node) {
+                Some(index) => index,
+                None => {
+                    nodes.push(Node { id: from_node, edges: Vec::new() });
+                    nodes.len() - 1
+                }
+            };
 
                 // Add the edge to the from_node
                 nodes[from_index].edges.push(to_node);
@@ -58,7 +54,6 @@ impl Graph {
                     nodes.push(Node { id: to_node, edges: Vec::new() });
                 }
             }
-        }
 
         Ok(Graph { nodes })
     }
