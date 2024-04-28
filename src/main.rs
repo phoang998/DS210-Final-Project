@@ -70,20 +70,49 @@ impl Graph {
                 }
             }
         }
+
+        distances
     }
 
     // Calculate the average distance 
     fn average_distance(&self) -> f32 {
-        // code
+        let distances = self.calculate_distances();
+        let sum: f32 = distances.iter().sum();
+        let count = distances.len() as f32;
+        sum / count
     }
 
     // Calculate the summary statistics
-    fn summary_statistics(&self) -> (f32, f32, f32, Vec<f32>) {
-        // code
+    fn summary_statistics(&self) -> (f32, Vec<f32>) {
+        let distances = self.calculate_distances();
+    let max = *distances.iter().max_by(|a, b| a.partial_cmp(b).unwrap()).unwrap();
+    let min = *distances.iter().min_by(|a, b| a.partial_cmp(b).unwrap()).unwrap();
+    let mut sorted_distances = distances.clone();
+    sorted_distances.sort_by(|a, b| a.partial_cmp(b).unwrap());
+    let mid = sorted_distances.len() / 2;
+    let q1 = if sorted_distances.len() % 2 == 0 {
+        (sorted_distances[mid / 2 - 1] + sorted_distances[mid / 2]) as f32 / 2.0
+    } else {
+        sorted_distances[mid / 2] as f32
+    };
+    let q3 = if sorted_distances.len() % 2 == 0 {
+        (sorted_distances[mid + mid / 2 - 1] + sorted_distances[mid + mid / 2]) as f32 / 2.0
+    } else {
+        sorted_distances[mid + mid / 2] as f32
+    };
+    let median = if sorted_distances.len() % 2 == 0 {
+        (sorted_distances[mid - 1] + sorted_distances[mid]) as f32 / 2.0
+    } else {
+        sorted_distances[mid] as f32
+    };
+    let mean = distances.iter().sum::<f32>() / distances.len() as f32;
+    let variance = distances.iter().map(|x| (*x - mean).powi(2)).sum::<f32>() / distances.len() as f32;
+    let std_dev = variance.sqrt();
+    (min, q1, median, q3, max, std_dev, distances)
     }
+}
 
-    // Plot the heatmap
-    fn plot_heatmap(&self, heatmap_data: &[f32]) {
-        // code
-    }
+// Print results 
+fn main () {
+    // code
 }
