@@ -1,7 +1,7 @@
 use std::fs::File;
 use std::io::{self, BufRead};
 use std::path::Path;
-use rand::Rng;
+use rand::seq::IteratorRandom;
 
 #[derive(Debug)]
 struct Node {
@@ -26,7 +26,7 @@ impl Graph {
         let lines: Vec<_> = reader.lines().choose_multiple(&mut rng, 30000);
 
         for line in lines {
-            let line = line?:
+            let line = line?;
 
             // Ignore comments and header
             if line.starts_with('#') || line.contains("FromNodeId") {
@@ -38,7 +38,7 @@ impl Graph {
             let to_node: u32 = parts.next().unwrap().parse().unwrap();
 
             // Check if from_node is already in the list of nodes
-            let from_index = match nodes.iter().position(|n| n.id == from_node) {
+            let from_index = match nodes.iter().position(|n: &Node| n.id == from_node) {
                 Some(index) => index,
                 None => {
                     nodes.push(Node { id: from_node, edges: Vec::new() });
@@ -83,36 +83,54 @@ impl Graph {
     }
 
     // Calculate the summary statistics
-    fn summary_statistics(&self) -> (f32, Vec<f32>) {
+    fn summary_statistics(&self) -> (f32, f32, f32, f32, f32, f32, Vec<f32>) {
         let distances = self.calculate_distances();
-    let max = *distances.iter().max_by(|a, b| a.partial_cmp(b).unwrap()).unwrap();
-    let min = *distances.iter().min_by(|a, b| a.partial_cmp(b).unwrap()).unwrap();
-    let mut sorted_distances = distances.clone();
-    sorted_distances.sort_by(|a, b| a.partial_cmp(b).unwrap());
-    let mid = sorted_distances.len() / 2;
-    let q1 = if sorted_distances.len() % 2 == 0 {
-        (sorted_distances[mid / 2 - 1] + sorted_distances[mid / 2]) as f32 / 2.0
-    } else {
-        sorted_distances[mid / 2] as f32
-    };
-    let q3 = if sorted_distances.len() % 2 == 0 {
-        (sorted_distances[mid + mid / 2 - 1] + sorted_distances[mid + mid / 2]) as f32 / 2.0
-    } else {
-        sorted_distances[mid + mid / 2] as f32
-    };
-    let median = if sorted_distances.len() % 2 == 0 {
-        (sorted_distances[mid - 1] + sorted_distances[mid]) as f32 / 2.0
-    } else {
-        sorted_distances[mid] as f32
-    };
-    let mean = distances.iter().sum::<f32>() / distances.len() as f32;
-    let variance = distances.iter().map(|x| (*x - mean).powi(2)).sum::<f32>() / distances.len() as f32;
-    let std_dev = variance.sqrt();
-    (min, q1, median, q3, max, std_dev, distances)
+        let min = *distances.iter().min_by(|a, b| a.partial_cmp(b).unwrap()).unwrap();
+        let mut sorted_distances = distances.clone();
+        sorted_distances.sort_by(|a, b| a.partial_cmp(b).unwrap());
+        let mid = sorted_distances.len() / 2;
+        let q1 = if sorted_distances.len() % 2 == 0 {
+            (sorted_distances[mid / 2 - 1] + sorted_distances[mid / 2]) as f32 / 2.0
+        } else {
+            sorted_distances[mid / 2] as f32
+        };
+        let median = if sorted_distances.len() % 2 == 0 {
+            (sorted_distances[mid - 1] + sorted_distances[mid]) as f32 / 2.0
+        } else {
+            sorted_distances[mid] as f32
+        };
+        let q3 = if sorted_distances.len() % 2 == 0 {
+            (sorted_distances[mid + mid / 2 - 1] + sorted_distances[mid + mid / 2]) as f32 / 2.0
+        } else {
+            sorted_distances[mid + mid / 2] as f32
+        };
+        let max = *distances.iter().max_by(|a, b| a.partial_cmp(b).unwrap()).unwrap();
+        let mean = distances.iter().sum::<f32>() / distances.len() as f32;
+        let variance = distances.iter().map(|x| (*x - mean).powi(2)).sum::<f32>() / distances.len() as f32;
+        let std_dev = variance.sqrt();
+        (min, q1, median, q3, max, std_dev, distances)
     }
+    
 }
 
 // Print results 
 fn main () {
-    // code
+    println!("Starting the program");
+
+    // Read the graph from the file
+    let graph = Graph::from_file(Path::new("roadNet-PA.txt")).expect("Failed to read the file");
+
+    println!("Read the graph from the file");
+
+    // Calculate the average distance
+    let average_distance = graph.average_distance();
+
+    // Print the average distance
+    println!("Average Distance: {}", average_distance);
+
+    // Calculate the summary statistics
+    let (min, q1, median, q3, max, std_dev, _distribution) = graph.summary_statistics();
+
+    // Print the summary statistics
+    println!("Min: {}, Q1: {}, Median: {}, Q3: {}, Max: {}, Standard Deviation: {}", min, q1, median, q3, max, std_dev);
 }
